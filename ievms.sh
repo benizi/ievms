@@ -179,8 +179,17 @@ check_unar() {
     then
         hash unar 2>&- || install_unar
     else
-        hash unar 2>&- || fail "Linux support requires unar (sudo apt-get install for Ubuntu/Debian)"
+        hash unar 2>&- || hash unzip 2>&- || fail "Linux support requires unar or unzip"
     fi
+}
+
+# Extract the OVA from the downloaded Zip file.
+extract_ova() {
+    local archive="$1"
+    local ova="$2"
+    local cmd="unar"
+    hash "$cmd" 2>&- || cmd="unzip"
+    "$cmd" "$archive" "$ova" || fail "Failed to extract ${archive} to ${ievms_home}/${ova}, ${cmd} command returned error code $?"
 }
 
 # Pause execution until the virtual machine with a given name shuts down.
@@ -410,7 +419,7 @@ build_ievm() {
         download "OVA ZIP" "${url}" "${archive}" "${md5}"
 
         log "Extracting OVA from ${ievms_home}/${archive}"
-        unar "${archive}" || fail "Failed to extract ${archive} to ${ievms_home}/${ova}, unar command returned error code $?"
+        extract_ova "${archive}" "${ova}"
     fi
 
     log "Checking for existing ${vm} VM"
